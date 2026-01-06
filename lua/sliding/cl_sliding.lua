@@ -27,7 +27,12 @@ hook.Add("Think", "EE_Sliding", function()
 		if not ply:GetNWBool("EE_Sliding") then
 			ply.EE_SlideAng = ply.EE_SlideAng or angle_zero
 			ply.EE_SlideAng = EE.DampenAngle(10, ply.EE_SlideAng, angle_zero)
-			ply:ManipulateBoneAngles(bone, ply.EE_SlideAng)
+
+			if pac then
+				pac.ManipulateBoneAngles(ply, bone, ply.EE_SlideAng)
+			else
+				ply:ManipulateBoneAngles(bone, ply.EE_SlideAng)
+			end
 
 			if ply.EE_SlideSound then
 				ply.EE_SlideSound:Stop()
@@ -76,6 +81,11 @@ hook.Add("Think", "EE_Sliding", function()
 
 		ply.EE_SlideAng = ply.EE_SlideAng or angle_zero
 		ply.EE_SlideAng = EE.DampenAngle(10, ply.EE_SlideAng, ang)
-		ply:ManipulateBoneAngles(bone, ply.EE_SlideAng)
+
+		if pac then
+			pac.ManipulateBoneAngles(ply, bone, ply.EE_SlideAng)
+		else
+			ply:ManipulateBoneAngles(bone, ply.EE_SlideAng)
+		end
 	end
 end)

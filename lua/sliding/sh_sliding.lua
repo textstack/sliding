@@ -46,6 +46,19 @@ sound.Add {
 	},
 }
 
+local poseAng = Angle(0, -90, 0)
+hook.Add("UpdateAnimation", "EE_Sliding", function(ply)
+	if not ply:GetNWBool("EE_Sliding") then return end
+
+	local vel = ply:GetVelocity()
+	vel:Normalize()
+
+	local aim = ply:GetAimVector()
+	aim:Rotate(poseAng)
+
+	ply:SetPoseParameter("aim_yaw", vel:Dot(aim) * 90)
+end)
+
 local gravityCvar = GetConVar("sv_gravity")
 local maxVelocityCvar = GetConVar("sv_maxvelocity")
 local rotAng = Angle()
@@ -97,7 +110,7 @@ local function handleSliding(ply, mv, pr)
 	if hitNormal then
 		local slopeMult = 2
 		if hitNormal.x * vel.x + hitNormal.y * vel.y > 0 then
-			slopeMult = slopeMult * 2
+			slopeMult = slopeMult * 1.5
 		end
 
 		vel.x = vel.x + hitNormal.x * gravity * frameTime * slopeMult
@@ -170,39 +183,47 @@ hook.Add("PlayerFootstep", "EE_Sliding", function(ply)
 end)
 
 local calcIdeals = {
-	[ACT_HL2MP_SIT_PISTOL] = "_PISTOL",
-	[ACT_HL2MP_SIT_SHOTGUN] = "_SHOTGUN",
-	[ACT_HL2MP_SIT_SMG1] = "_SMG1",
-	[ACT_HL2MP_SIT_AR2] = "_AR2",
-	[ACT_HL2MP_SIT_PHYSGUN] = "_PHYSGUN",
-	[ACT_HL2MP_SIT_GRENADE] = "_GRENADE",
-	[ACT_HL2MP_SIT_RPG] = "_RPG",
-	[ACT_HL2MP_SIT_CROSSBOW] = "_CROSSBOW",
-	[ACT_HL2MP_SIT_MELEE] = "_MELEE",
-	[ACT_HL2MP_SIT_SLAM] = "_SLAM",
-	[ACT_HL2MP_SIT_FIST] = "_FIST"
+	pistol = ACT_HL2MP_SIT_PISTOL,
+	revolver = ACT_HL2MP_SIT_PISTOL,
+	duel = "sit_duel",
+	smg = ACT_HL2MP_SIT_SMG1,
+	ar2 = ACT_HL2MP_SIT_AR2,
+	shotgun = ACT_HL2MP_SIT_SHOTGUN,
+	rpg = ACT_HL2MP_SIT_RPG,
+	physgun = ACT_HL2MP_SIT_PHYSGUN,
+	crossbow = ACT_HL2MP_SIT_CROSSBOW,
+	camera = "sit_camera",
+	slam = ACT_HL2MP_SIT_SLAM,
+	normal = ACT_HL2MP_SIT,
+	grenade = ACT_HL2MP_SIT_GRENADE,
+	melee = ACT_HL2MP_SIT_MELEE,
+	melee2 = "sit_melee2",
+	knife = "sit_knife",
+	fist = ACT_HL2MP_SIT_FIST,
+	passive = "sit_passive",
+	magic = ACT_HL2MP_SIT_PISTOL
 }
 
 hook.Add("CalcMainActivity", "EE_Sliding", function(ply)
 	if not ply:GetNWBool("EE_Sliding") then return end
 
+	ply.CalcIdeal = ACT_HL2MP_SIT
 	ply.CalcSeqOverride = -1
 
-	local seq = ply:GetSequenceActivityName(ply:GetSequence())
-	for k, v in pairs(calcIdeals) do
-		if string.find(seq, v) then
-			ply.CalcIdeal = k
-			return ply.CalcIdeal, ply.CalcSeqOverride
-		end
+	local wep = ply:GetActiveWeapon()
+	if not IsValid(wep) then return ply.CalcIdeal, ply.CalcSeqOverride end
+
+	if wep.HoldType then
+		ply.CalcIdeal = calcIdeals[string.lower(wep.HoldType)] or ply.CalcIdeal
+	else
+		ply.CalcIdeal = calcIdeals[string.lower(wep:GetHoldType())] or ply.CalcIdeal
 	end
 
-	ply.CalcIdeal = ACT_HL2MP_SIT
+	if type(ply.CalcIdeal) == "string" then
+		ply.CalcIdeal = ply:GetSequenceActivity(ply:LookupSequence(ply.CalcIdeal))
+	end
 
 	return ply.CalcIdeal, ply.CalcSeqOverride
-end)
-
-hook.Add("PlayerSwitchWeapon", "EE_Sliding", function(ply)
-	if ply:GetNWBool("EE_Sliding") then return true end
 end)
 
 ---Smooths out the changes of a realtime-updated value
