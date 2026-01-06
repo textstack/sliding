@@ -46,22 +46,6 @@ sound.Add {
 	},
 }
 
-local poseAng = Angle(0, -90, 0)
-hook.Add("UpdateAnimation", "EE_Sliding", function(ply)
-	if not ply:GetNWBool("EE_Sliding") then return end
-
-	local vel = ply:GetVelocity()
-	vel:Normalize()
-
-	local aim = ply:GetAimVector()
-	aim:Rotate(poseAng)
-
-	local yaw = vel:Dot(aim) * 90
-
-	ply:SetPoseParameter("aim_yaw", yaw)
-	ply:SetPoseParameter("head_yaw", yaw)
-end)
-
 local gravityCvar = GetConVar("sv_gravity")
 local maxVelocityCvar = GetConVar("sv_maxvelocity")
 local rotAng = Angle()
@@ -197,7 +181,7 @@ local calcIdeals = {
 	crossbow = ACT_HL2MP_SIT_CROSSBOW,
 	camera = "sit_camera",
 	slam = ACT_HL2MP_SIT_SLAM,
-	normal = ACT_HL2MP_SIT,
+	--normal = ACT_HL2MP_SIT,
 	grenade = ACT_HL2MP_SIT_GRENADE,
 	melee = ACT_HL2MP_SIT_MELEE,
 	melee2 = "sit_melee2",
@@ -207,26 +191,41 @@ local calcIdeals = {
 	magic = ACT_HL2MP_SIT_PISTOL
 }
 
-hook.Add("CalcMainActivity", "EE_Sliding", function(ply)
+local function getCalcIdeal(ply)
+	local wep = ply:GetActiveWeapon()
+	if not IsValid(wep) then return end
+
+	local calcIdeal
+	if wep.HoldType then
+		calcIdeal = calcIdeals[string.lower(wep.HoldType)]
+	else
+		calcIdeal = calcIdeals[string.lower(wep:GetHoldType())]
+	end
+
+	if type(calcIdeal) == "string" then
+		return ply:GetSequenceActivity(ply:LookupSequence(calcIdeal))
+	end
+
+	return calcIdeal
+end
+
+local poseAng = Angle(0, -90, 0)
+hook.Add("UpdateAnimation", "EE_Sliding", function(ply)
 	if not ply:GetNWBool("EE_Sliding") then return end
 
-	ply.CalcIdeal = ACT_HL2MP_SIT
-	ply.CalcSeqOverride = -1
+	local vel = ply:GetVelocity()
+	vel:Normalize()
 
-	local wep = ply:GetActiveWeapon()
-	if not IsValid(wep) then return ply.CalcIdeal, ply.CalcSeqOverride end
+	local aim = ply:GetAimVector()
+	aim:Rotate(poseAng)
 
-	if wep.HoldType then
-		ply.CalcIdeal = calcIdeals[string.lower(wep.HoldType)] or ply.CalcIdeal
+	local yaw = vel:Dot(aim) * 90
+
+	if getCalcIdeal(ply) then
+		ply:SetPoseParameter("aim_yaw", yaw)
 	else
-		ply.CalcIdeal = calcIdeals[string.lower(wep:GetHoldType())] or ply.CalcIdeal
+		ply:SetPoseParameter("head_yaw", yaw)
 	end
-
-	if type(ply.CalcIdeal) == "string" then
-		ply.CalcIdeal = ply:GetSequenceActivity(ply:LookupSequence(ply.CalcIdeal))
-	end
-
-	return ply.CalcIdeal, ply.CalcSeqOverride
 end)
 
 ---Smooths out the changes of a realtime-updated value
