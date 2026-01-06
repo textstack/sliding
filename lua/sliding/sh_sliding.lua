@@ -56,7 +56,10 @@ hook.Add("UpdateAnimation", "EE_Sliding", function(ply)
 	local aim = ply:GetAimVector()
 	aim:Rotate(poseAng)
 
-	ply:SetPoseParameter("aim_yaw", vel:Dot(aim) * 90)
+	local yaw = vel:Dot(aim) * 90
+
+	ply:SetPoseParameter("aim_yaw", yaw)
+	ply:SetPoseParameter("head_yaw", yaw)
 end)
 
 local gravityCvar = GetConVar("sv_gravity")
