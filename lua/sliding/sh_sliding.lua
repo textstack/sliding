@@ -228,6 +228,15 @@ hook.Add("UpdateAnimation", "EE_Sliding", function(ply)
 	end
 end)
 
+hook.Add("CalcMainActivity", "EE_Sliding", function(ply)
+	if not ply:GetNWBool("EE_Sliding") then return end
+
+	ply.CalcIdeal = getCalcIdeal(ply) or ACT_HL2MP_SIT
+	ply.CalcSeqOverride = -1
+
+	return ply.CalcIdeal, ply.CalcSeqOverride
+end)
+
 ---Smooths out the changes of a realtime-updated value
 -- inputs:
 --   speed - number representing how fast the output value changes, higher is faster
