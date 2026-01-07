@@ -81,7 +81,6 @@ local function handleSliding(ply, mv, pr)
 		desiredDir:Rotate(rotAng)
 
 		local sideDot = (desiredDir.x * vel.x + desiredDir.y * vel.y) / length2D
-
 		if sideDot > 0.05 then
 			rotAng.yaw = frameTime * 50
 			vel:Rotate(rotAng)
@@ -93,6 +92,21 @@ local function handleSliding(ply, mv, pr)
 
 	local gravity = gravityCvar:GetFloat()
 
+	if ply:OnGround() then
+		local speedUp = math.max(math.abs(pr.Get("EE_OldVel", oldVel).z) - gravity * 0.5, 0)
+		if speedUp > 0 then
+			pr.EmitSound(ply:GetPos(), "Sliding.ImpactSoft")
+
+			local maxSpeedUp = ply:GetRunSpeed() * 3
+			if speedUp + length2D > maxSpeedUp then
+				speedUp = math.max(maxSpeedUp - length2D, 0)
+			end
+
+			vel.x = vel.x + speedUp * (vel.x / length2D)
+			vel.y = vel.y + speedUp * (vel.y / length2D)
+		end
+	end
+
 	local hitNormal = makeNormal(ply)
 	if hitNormal then
 		local slopeMult = 2
@@ -102,16 +116,6 @@ local function handleSliding(ply, mv, pr)
 
 		vel.x = vel.x + hitNormal.x * gravity * frameTime * slopeMult
 		vel.y = vel.y + hitNormal.y * gravity * frameTime * slopeMult
-	end
-
-	if ply:OnGround() then
-		local speedUp = math.max(math.abs(pr.Get("EE_OldVel", oldVel).z) - gravity * 0.5, 0)
-		vel.x = vel.x + speedUp * (vel.x / length2D)
-		vel.y = vel.y + speedUp * (vel.y / length2D)
-
-		if speedUp > 0 then
-			pr.EmitSound(ply:GetPos(), "Sliding.ImpactSoft")
-		end
 	end
 
 	vel.x = EE.Dampen(0.1, vel.x, 0, frameTime)
