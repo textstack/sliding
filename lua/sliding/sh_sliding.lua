@@ -57,6 +57,10 @@ local function handleSliding(ply, mv, pr)
 	local vel = pr.Get("EE_SlideVel", slideVel)
 	local length2D = math.sqrt(vel.x^2 + vel.y^2)
 
+	if length2D == 0 then
+		length2D = 1
+	end
+
 	desiredDir.x, desiredDir.y = 0, 0
 
 	if mv:KeyDown(IN_MOVELEFT) then
