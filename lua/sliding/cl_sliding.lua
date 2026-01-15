@@ -2,6 +2,8 @@
 	Sliding - run and crouch to slide!
 --]]
 
+CreateClientConVar("sliding_enabled", 1, true, true, "Whether you should slide when running and crouching", 0, 1)
+
 local EE = EE or {}
 
 local function groundRotate(ply, ang)

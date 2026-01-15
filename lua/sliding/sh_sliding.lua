@@ -142,7 +142,7 @@ local function handleSlideAttempt(ply, mv, pr)
 		pr.Set("EE_TryingToSlide", true)
 	end
 
-	if not mv:KeyDown(IN_DUCK) or ply:GetMoveType() ~= MOVETYPE_WALK then
+	if not mv:KeyDown(IN_DUCK) or ply:GetMoveType() ~= MOVETYPE_WALK or ply:GetInfo("sliding_enabled") == "0" then
 		pr.Set("EE_Sliding", false)
 		pr.Set("EE_TryingToSlide", false)
 	end
